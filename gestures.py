@@ -97,6 +97,13 @@ def volume_gesture(landmarks_list, labels, frame, cv, shared_data):
                     cv.putText(frame, f"Volume: {shared_data['right_hand_vol']:.2f}",
                                (x_pos, y_pos),
                                cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+
+    def close_threads():
+        """Shuts down all threads gracefully."""
+        print("Shutting down all threads...")
+        executor.shutdown(wait=True)
+
+
     with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = []
         futures.append(executor.submit(check_right_hand(cv, frame, labels, landmarks_list, shared_data)))
@@ -106,4 +113,7 @@ def volume_gesture(landmarks_list, labels, frame, cv, shared_data):
         concurrent.futures.wait(futures)
 
 
+     # Register this function to be called on program exit
+        import atexit
+        atexit.register(close_threads)
 
