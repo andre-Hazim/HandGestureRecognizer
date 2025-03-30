@@ -1,8 +1,10 @@
 from threading import Thread
+import concurrent.futures
 import cv2 as cv
 import mediapipe.python.solutions.hands as mp_hands
 import gestures
 import speech_util
+from gestures import executor
 
 
 def camera_operations():
@@ -26,9 +28,12 @@ def camera_operations():
 
         frame = cv.cvtColor(frame, cv.COLOR_RGB2BGR)
         if hands_detected.multi_hand_landmarks:
-            hand_label = hands_detected.multi_handedness
-            landmarks = hands_detected.multi_hand_landmarks
-            gestures.volume_gesture(landmarks, hand_label, frame, cv, shared_data)
+            try:
+                hand_label = hands_detected.multi_handedness
+                landmarks = hands_detected.multi_hand_landmarks
+                gestures.volume_gesture(landmarks, hand_label, frame, cv, shared_data)
+            except Exception as e:
+                print(f"Error in volume_gesture: {e}")
 
         cv.imshow("Show Video", frame)
 
@@ -38,6 +43,6 @@ def camera_operations():
     # Release the camera
     cam.release()
 
-
-cam_thread = Thread(target=camera_operations)
-cam_thread.start()
+pool = concurrent.futures.ThreadPoolExecutor()
+future = pool.submit(camera_operations)
+print(future.result())  # Catches errors
