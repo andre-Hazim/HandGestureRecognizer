@@ -15,8 +15,26 @@ hands = mp_hands.Hands(
 
 cam = cv.VideoCapture(0)
 
+
+def volume_changer():
+    volume = fingers.distance_thumb_index(landmarks)
+    thumb_pos, index_pos = fingers.draw_dist(landmarks, frame)
+    cv.line(frame, thumb_pos, index_pos, (0, 255, 0), 3)
+    drawing.draw_landmarks(frame, hand_landmark, mp_hands.HAND_CONNECTIONS)
+    label = MessageToDict(hands_detected.multi_handedness[0])['classification'][0]['label']
+    if label == 'Right':
+        x_pos = (index_pos[0] + thumb_pos[0]) // 2 - 200  # Adjust by 50 to avoid overlapping
+    else:
+        x_pos = (index_pos[0] + thumb_pos[0]) // 2  # Adjust by 50 to avoid overlapping
+    y_pos = (index_pos[1] + thumb_pos[1]) // 2
+    cv.putText(frame, f"Volume: {volume:.2f}", (x_pos, y_pos),
+               cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+    if fingers.is_fist_closed(landmarks):
+        volume_control.set_volume(volume)
+
+
 while cam.isOpened():
-    success, frame = cam.read()
+    success, frame = cam.red()
     if not success:
         print("cam failed")
         continue
@@ -31,24 +49,7 @@ while cam.isOpened():
         for hand_landmark in hands_detected.multi_hand_landmarks:
             landmarks = hand_landmark.landmark
 
-
-            dist =fingers.distance_thumb_index(landmarks)
-            thumb_pos, index_pos = fingers.draw_dist(landmarks, frame)
-            cv.line(frame, thumb_pos, index_pos, (0, 255, 0), 3)
-            drawing.draw_landmarks(frame, hand_landmark, mp_hands.HAND_CONNECTIONS)
-            label = MessageToDict(hands_detected.multi_handedness[0])['classification'][0]['label']
-            if label == 'Right':
-                x_pos = (index_pos[0] + thumb_pos[0]) // 2 - 200  # Adjust by 50 to avoid overlapping
-            else:
-                x_pos = (index_pos[0] + thumb_pos[0]) // 2  # Adjust by 50 to avoid overlapping
-
-            y_pos = (index_pos[1] + thumb_pos[1]) // 2
-
-            cv.putText(frame, f"Dist: {dist:.2f}", (x_pos, y_pos),
-                       cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-            key = cv.waitKey(1) & 0xFF
-            if key == ord('v'):  # 'v' key
-                volume_control.set_volume(fingers.distance_thumb_index(landmarks))
+            volume_changer()
 
     cv.imshow("Show Video", frame)
 
