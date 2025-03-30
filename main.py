@@ -13,7 +13,7 @@ hands = mp_hands.Hands(
 
 cam = cv.VideoCapture(0)
 
-shared_data = {'dist': 0, 'text_pos': (0, 0)}
+shared_data = {'right_hand_vol': 0, 'text_pos': (0, 0)}
 
 while cam.isOpened():
     success, frame = cam.read()
@@ -27,12 +27,9 @@ while cam.isOpened():
 
     frame = cv.cvtColor(frame, cv.COLOR_RGB2BGR)
     if hands_detected.multi_hand_landmarks:
-        for hand_landmark in hands_detected.multi_hand_landmarks:
-            landmarks = hand_landmark.landmark
-            label = MessageToDict(hands_detected.multi_handedness[0])['classification'][0]['label']
-            drawing.draw_landmarks(frame, hand_landmark, mp_hands.HAND_CONNECTIONS)
-
-            gestures.volume_gesture(landmarks,label,frame,cv,shared_data)
+        hand_label = hands_detected.multi_handedness
+        landmarks = hands_detected.multi_hand_landmarks
+        gestures.volume_gesture(landmarks,hand_label,frame,cv,shared_data)
 
     cv.imshow("Show Video", frame)
 
