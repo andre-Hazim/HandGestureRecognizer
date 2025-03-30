@@ -119,7 +119,7 @@ def distance_thumb_index(points):
     normalized_distance = np.clip(normalized_distance, 0, 1)  # Keep in range [0,1]
     return round(normalized_distance, 2)
 
-def draw_dist(landmarks, frame):
+def get_thumb_and_index_pos(landmarks, frame):
     thumb_tip = landmarks[THUMB_TIP]
     index_tip = landmarks[INDEX_FINGER_TIP]
     h, w, _ = frame.shape
