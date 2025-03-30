@@ -2,8 +2,14 @@ import fingers
 import volume_control
 import concurrent.futures
 
-pool = concurrent.futures.ThreadPoolExecutor(max_workers=2)
 
+executor = concurrent.futures.ThreadPoolExecutor()
+
+
+def close_threads():
+    """Shuts down all threads gracefully."""
+    global executor
+    executor.shutdown(wait=True)
 
 def volume_gesture(landmarks_list, labels, frame, cv, shared_data):
     """
@@ -97,23 +103,15 @@ def volume_gesture(landmarks_list, labels, frame, cv, shared_data):
                     cv.putText(frame, f"Volume: {shared_data['right_hand_vol']:.2f}",
                                (x_pos, y_pos),
                                cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+    global  executor
+    futures = []
+    futures.append(executor.submit(check_right_hand(cv, frame, labels, landmarks_list, shared_data)))
 
-    def close_threads():
-        """Shuts down all threads gracefully."""
-        print("Shutting down all threads...")
-        executor.shutdown(wait=True)
+    futures.append(executor.submit(check_left_hand(labels, landmarks_list, shared_data)))
 
-
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = []
-        futures.append(executor.submit(check_right_hand(cv, frame, labels, landmarks_list, shared_data)))
-
-        futures.append(executor.submit(check_left_hand(labels, landmarks_list, shared_data)))
-
-        concurrent.futures.wait(futures)
+    concurrent.futures.wait(futures)
 
 
-     # Register this function to be called on program exit
-        import atexit
-        atexit.register(close_threads)
+
+
 

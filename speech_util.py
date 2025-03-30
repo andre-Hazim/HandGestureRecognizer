@@ -7,7 +7,7 @@ r = sr.Recognizer()
 
 def get_phrase():
     with sr.Microphone() as source:
-        print("Talk")
+        print("Listening")
         audio_text = r.listen(source)
         print("Time over, thanks")
         # recoginze_() method will throw a request
@@ -21,7 +21,3 @@ def get_phrase():
             return "Sorry, I did not get that"
 
 
-text = get_phrase()
-print("text " + text )
-if {"open", "spotify"}.issubset(text.lower().split()):
-    subprocess.run("spotify.exe")
