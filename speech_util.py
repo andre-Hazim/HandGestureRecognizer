@@ -1,3 +1,4 @@
+import queue
 import subprocess
 
 import speech_recognition as sr
@@ -5,7 +6,7 @@ import speech_recognition as sr
 r = sr.Recognizer()
 
 
-def get_phrase():
+def get_phrase(q:queue.Queue):
     with sr.Microphone() as source:
         print("Listening")
         audio_text = r.listen(source)
@@ -16,8 +17,13 @@ def get_phrase():
 
         try:
             # using google speech recognition
-            return r.recognize_google(audio_text)
+            results = r.recognize_google(audio_text)
+            q.put(results)
         except:
             return "Sorry, I did not get that"
+
+
+
+
 
 
