@@ -10,7 +10,9 @@ import mediapipe.python.solutions.hands as mp_hands
 import fingers
 import gestures
 import speech_util
-from command_recognizer import VoiceReceiver, VoiceCommandInvoker, OpenSpotifyCommand, CloseSpotifyCommand
+from commands.spotify_commands import CloseSpotifyCommand, OpenSpotifyCommand
+from invoker.voice_invoker import VoiceCommandInvoker
+from receiver.voice_receiver import VoiceReceiver
 from gestures import executor
 
 exit_flag = False
