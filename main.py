@@ -1,3 +1,5 @@
+import inspect
+import pkgutil
 import queue
 import threading
 import time
@@ -7,13 +9,14 @@ import mediapipe.python.solutions.hands as mp_hands
 import atexit
 import signal
 import sys
-
+import importlib
+import commands
 import gestures
-import speech_util
+from parser import  Parser as parser
+from speech_util import SpeechRecognizer
 from commands.spotify_commands import CloseSpotifyCommand, OpenSpotifyCommand, PlaySpotifyCommand
 from invoker.voice_invoker import VoiceCommandInvoker
 from receiver.voice_receiver import VoiceReceiver
-
 
 
 class GestureVoiceApplication:
@@ -22,6 +25,8 @@ class GestureVoiceApplication:
     def __init__(self):
         """Initialize the application components."""
         # Initialize state flags
+        self.invoker = None
+        self.receiver = None
         self.is_running = False
         self.stop_event = threading.Event()
 
@@ -32,6 +37,8 @@ class GestureVoiceApplication:
         # Initialize command system
         self.setup_command_system()
 
+        # Create speech object
+        self.speech_util = SpeechRecognizer()
         # Thread containers
         self.threads = []
 
@@ -46,13 +53,16 @@ class GestureVoiceApplication:
         self.invoker = VoiceCommandInvoker()
 
         # Register commands
-        open_spotify_cmd = OpenSpotifyCommand(self.receiver)
-        close_spotify_cmd = CloseSpotifyCommand(self.receiver)
-        play_song_cmd = PlaySpotifyCommand(self.receiver)
+        self.auto_register_commands()
 
-        self.invoker.set_command('open spotify', open_spotify_cmd)
-        self.invoker.set_command('close spotify', close_spotify_cmd)
-        self.invoker.set_command('play song', play_song_cmd)
+    def auto_register_commands(self):
+
+        for _, module_name, _ in pkgutil.iter_modules(commands.__path__, commands.__name__ + "."): #Get the modules in commands folder
+            module = importlib.import_module(module_name)
+            print(module)
+            for name, cls in inspect.getmembers(module, inspect.isclass):
+                if issubclass(cls, commands.command.Command) and hasattr(cls, "name"):
+                    self.invoker.set_command(cls.name, cls(self.receiver))
 
     def start(self):
         """Start the application and all its components."""
@@ -165,7 +175,7 @@ class GestureVoiceApplication:
             while not self.stop_event.is_set():
                 # Create speech recognition thread for this cycle
                 speech_thread = threading.Thread(
-                    target=speech_util.get_phrase,
+                    target=self.speech_util.get_phrase,
                     args=(self.result_queue,),
                     name="SpeechThread"
                 )
@@ -177,7 +187,8 @@ class GestureVoiceApplication:
                     result = self.result_queue.get()
                     if result:
                         print(f"Executing command: '{result}'")
-                        self.invoker.execute_command(result.lower())
+                        cmd, args = parser.parse_voice_command(result.lower())
+                        self.invoker.execute_command(cmd, args)
 
                 # Short delay to prevent high CPU usage
                 time.sleep(0.1)

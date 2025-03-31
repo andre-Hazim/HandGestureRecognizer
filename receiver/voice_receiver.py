@@ -10,6 +10,7 @@ class VoiceReceiver:
             redirect_uri="http://localhost:8888/callback",
             scope="user-modify-playback-state user-read-playback-state"
         ))
+        self.device_id=None
     def open_spotify(self):
         print("Opening Spotify...")
 
@@ -23,8 +24,9 @@ class VoiceReceiver:
         except Exception as e:
             print(f"Error closing Spotify: {e}")
 
-    def play_song(self):
-        search_results = self.sp.search(q="Shape of You", type="track", limit=1)
+    def play_song(self,song):
+
+        search_results = self.sp.search(q=song, type="track", limit=1)
 
         # Check if any track was found
         if search_results['tracks']['items']:
@@ -36,12 +38,23 @@ class VoiceReceiver:
             # Get an active device
             devices = self.sp.devices()
             if devices['devices']:
-                device_id = devices['devices'][0]['id']  # Use first available device
+                for i in devices['devices']:
+                    if i['type'] == 'Computer':
+                        self.device_id =i['id']
 
                 # Play the track
-                self.sp.start_playback(device_id=device_id, uris=[track_uri])
+                self.sp.start_playback(device_id=self.device_id, uris=[track_uri])
                 print(f"Now Playing: {track_name} by {artist_name}")
             else:
                 print("No active Spotify device found. Open Spotify and play something first.")
         else:
             print("No tracks found.")
+
+    def pause_song(self):
+        if not self.device_id is None:
+            self.sp.pause_playback(self.device_id)
+
+    def resume_song(self):
+        if not self.device_id is None:
+            self.sp.start_playback(self.device_id)
+
