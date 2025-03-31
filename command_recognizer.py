@@ -12,13 +12,25 @@ class OpenSpotifyCommand(Command):
 
     def execute(self):
         self.receiver.open_spotify()
+class CloseSpotifyCommand(Command):
+    def __init__(self, receiver):
+        self.receiver = receiver
 
+    def execute(self):
+        self.receiver.close_spotify()
 # Receiver class: This is where the actual work happens
 class VoiceReceiver:
-    @staticmethod
-    def open_spotify():
+    def open_spotify(self):
         print("Opening Spotify...")
-        subprocess.run("spotify.exe")
+        subprocess.Popen(["spotify.exe"])
+
+    def close_spotify(self):
+        print("Closing Spotify")
+        try:
+            subprocess.run("taskkill /f /im Spotify.exe", shell=True)
+            print("Spotify closed.")
+        except Exception as e:
+            print(f"Error closing Spotify: {e}")
 
 class VoiceCommandInvoker:
     def __init__(self):

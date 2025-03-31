@@ -10,7 +10,7 @@ import mediapipe.python.solutions.hands as mp_hands
 import fingers
 import gestures
 import speech_util
-from command_recognizer import VoiceReceiver, VoiceCommandInvoker, OpenSpotifyCommand
+from command_recognizer import VoiceReceiver, VoiceCommandInvoker, OpenSpotifyCommand, CloseSpotifyCommand
 from gestures import executor
 
 exit_flag = False
@@ -73,8 +73,10 @@ def main():
 
     receiver = VoiceReceiver()
     open_spotify = OpenSpotifyCommand(receiver)
+    close_spotify = CloseSpotifyCommand(receiver)
     invoker = VoiceCommandInvoker()
     invoker.set_command('open spotify', open_spotify)
+    invoker.set_command('close spotify', close_spotify)
     # Start the keypress listener thread to detect 'q'
     thread3 = threading.Thread(target=listen_for_quit, daemon=True)
     thread3.start()
